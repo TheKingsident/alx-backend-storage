@@ -7,7 +7,7 @@ AFTER INSERT ON orders
 FOR EACH ROW
 BEGIN
     UPDATE items
-    SET quantity = NEW.number
+    SET quantity = quantity - NEW.number
     WHERE name = items.name;
 END //
 DELIMITER ;
