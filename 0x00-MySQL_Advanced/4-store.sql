@@ -8,6 +8,6 @@ FOR EACH ROW
 BEGIN
     UPDATE items
     SET quantity = quantity - NEW.number
-    WHERE name = items.name;
+    WHERE name = NEW.name;
 END //
 DELIMITER ;
