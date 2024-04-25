@@ -1,0 +1,1 @@
+This directory contains assignment files for the "0x00. MySQL advanced" tasks from ALX
