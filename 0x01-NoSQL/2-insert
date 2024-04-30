@@ -1,3 +1,2 @@
-#!/bin/bash
-db_name=$1
-echo "db.school.insert({ name: 'Holberton school' })" | mongo $db_name
+// script that inserts a document in the collection school
+db.school.insertOne({"name": "Holberton school"});
