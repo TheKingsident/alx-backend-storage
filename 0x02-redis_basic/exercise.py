@@ -72,10 +72,15 @@ def replay(method: Callable):
     outputs_key = method.__qualname__ + ":outputs"
 
     redis_instance = method.__self__._redis
-    
+
     inputs = redis_instance.lrange(inputs_key, 0, -1)
     outputs = redis_instance.lrange(outputs_key, 0, -1)
 
     print(f"{method.__qualname__} was called {len(inputs)} times:")
     for i, (input_args, output) in enumerate(zip(inputs, outputs)):
-        print(f"{method.__qualname__}(*{input_args.decode()}) -> {output.decode()}")
+        call_info = (
+            f"{method.__qualname__}("
+            f"*{input_args.decode()})"
+            f" -> {output.decode()}"
+        )
+        print(call_info)
