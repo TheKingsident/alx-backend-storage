@@ -6,8 +6,6 @@ from functools import wraps
 import uuid
 from typing import Union, Callable
 
-
-
 def count_calls(method: Callable) -> Callable:
     """decorator that takes a single method Callable argument"""
     count_key = method.__qualname__ + "_count"
@@ -26,6 +24,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
     
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """store method that takes a data argument and returns a string"""
         key = str(uuid.uuid4())
@@ -49,4 +48,3 @@ class Cache:
         """automatically parametrize Cache.get"""
         return self.get(key, lambda x: int(x) if x else None)
 
-Cache.store = count_calls(Cache.store)
