@@ -6,6 +6,7 @@ from functools import wraps
 import uuid
 from typing import Union, Callable
 
+
 def count_calls(method: Callable) -> Callable:
     """decorator that takes a single method Callable argument"""
     count_key = method.__qualname__ + "_count"
@@ -15,6 +16,7 @@ def count_calls(method: Callable) -> Callable:
         self._redis.incr(count_key)
         return method(self, *args, **kwargs)
     return wrapper
+
 
 def call_history(method: Callable) -> Callable:
     """decorator to store the history of inputs and outputs"""
@@ -30,17 +32,6 @@ def call_history(method: Callable) -> Callable:
         return rlt
     return wrapper
 
-def replay(method: Callable):
-    """function to display the history of calls of a particular function"""
-    inputs_key = method.__qualname__ + ":inputs"
-    outputs_key = method.__qualname__ + ":outputs"
-    
-    inputs = cache._redis.lrange(inputs_key, 0, -1)
-    outputs = cache._redis.lrange(outputs_key, 0, -1)
-    
-    print(f"{method.__qualname__} was called {len(inputs)} times:")
-    for i, (input_args, output) in enumerate(zip(inputs, outputs)):
-        print(f"{method.__qualname__}(*{input_args.decode()}) -> {output.decode()}")
 
 class Cache:
 
@@ -49,7 +40,7 @@ class Cache:
         """store an instance of the Redis client as a private"""
         self._redis = redis.Redis()
         self._redis.flushdb()
-    
+
     @call_history
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
@@ -57,7 +48,7 @@ class Cache:
         key = str(uuid.uuid4())
         self._redis.set(key, data)
         return key
-    
+
     def get(self, key: str, fn: Callable = None) -> Union[str,
                                                           bytes, int, float]:
         """get method that take a key string argument"""
@@ -65,13 +56,26 @@ class Cache:
         if data is not None and fn is not None:
             data = fn(data)
         return data
-    
+
     def get_str(self, key: str) -> Union[str, None]:
         """automatically parametrize Cache.get"""
         return self.get(key, lambda x: x.decode("utf-8") if x else None)
-    
 
     def get_int(self, key: str) -> Union[int, None]:
         """automatically parametrize Cache.get"""
         return self.get(key, lambda x: int(x) if x else None)
 
+
+def replay(method: Callable):
+    """function to display the history of calls of a particular function"""
+    inputs_key = method.__qualname__ + ":inputs"
+    outputs_key = method.__qualname__ + ":outputs"
+
+    redis_instance = method.__self__._redis
+    
+    inputs = redis_instance.lrange(inputs_key, 0, -1)
+    outputs = redis_instance.lrange(outputs_key, 0, -1)
+
+    print(f"{method.__qualname__} was called {len(inputs)} times:")
+    for i, (input_args, output) in enumerate(zip(inputs, outputs)):
+        print(f"{method.__qualname__}(*{input_args.decode()}) -> {output.decode()}")
