@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""0. Writing strings to Redis"""
+
+import redis
+import uuid
+from typing import Union, Callable
+
+
+class Cache:
+    """Cache class, Writing strings to Redis """
+    def __init__(self) -> None:
+        """store an instance of the Redis client as a private"""
+        self._redis = redis.Redis()
+        self._redis.flushdb()
+    
+    def store(self, data: Union[str, bytes, int, float]) -> str:
+        """store method that takes a data argument and returns a string"""
+        key = str(uuid.uuid4())
+        self._redis.set(key, data)
+        return key
+    
+    def get(self, key: str, fn: Callable = None) -> Union[str,
+                                                          bytes, int, float]:
+        """get method that take a key string argument"""
+        data = self._redis.get(key)
+        if data is not None and fn is not None:
+            data = fn(data)
+        return data
+    
+    def get_str(self, key: str) -> Union[str, None]:
+        """automatically parametrize Cache.get"""
+        return self.get(key, lambda x: x.decode("utf-8") if x else None)
+    
+
+    def get_int(self, key: str) -> Union[int, None]:
+        """automatically parametrize Cache.get"""
+        return self.get(key, lambda x: int(x) if x else None)
